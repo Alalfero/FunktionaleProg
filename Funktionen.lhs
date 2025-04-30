@@ -279,8 +279,10 @@ infixl 7 *
 
 
 > (#) :: (Integral a1, Num a2) => a2 -> a1 -> a2
-> x#0 = 1
-
+> x # 0 = 1
+> x # n
+>   | even n    = (x * x) # (n `div` 2)
+>  | otherwise = x * (x * x) # ((n - 1) `div` 2)
 
 
 
@@ -288,7 +290,10 @@ infixl 7 *
 > kniffel :: Int -> Rational
 > kniffel n = prob n 5 5
 >   where 
->     prob n missing roll = 0
+>     prob 0 missing roll = 0
+>     prob n 0 roll = 1
+>     prob n missing 0 = prob (n-1) missing missing
+>     prob n missing roll = (1 % 6) * prob n (missing-1) (roll-1) + (5 % 6) * prob n missing (roll-1)
 
 
 
