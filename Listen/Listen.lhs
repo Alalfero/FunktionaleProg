@@ -222,4 +222,14 @@
 
 
 > anagram :: Eq a => [a] -> [[a]]
-> anagram xs = [];
+> anagram xs = perm cs
+>   where 
+>   cs = occurrences xs
+>   perm [] = []
+>   perm [(n,p)] = [replicate n p]
+>   perm ps = concat 
+>       [ map (\ys->x:ys)]
+>       $ perm $ filter (\(m,_)->m>0) 
+>       $ map (\(m,y)->if y==x then (m-1,y) else (m,y)) 
+>       ps 
+>      | (n,x)<-ps|
