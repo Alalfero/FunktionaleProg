@@ -9,6 +9,7 @@
 
 
 > import Data.List
+> import Data.Ord
 
 
 
@@ -151,8 +152,8 @@ writeFile "ex.tex"$toLaTeX $head ex
 
 
 
-> clusterBy :: (t -> t -> Bool) -> [t] -> [[t]]
-> clusterBy eq xs = go xs []
+> clusterBy :: Ord t => (t -> t -> Bool) -> [t] -> [[t]]
+> clusterBy eq xs = sortOn (firstIndex xs . head) $ map (sortBy (comparing Down)) $ go xs []
 >   where
 >     go [] _ = []
 >     go (y:ys) seen
@@ -161,6 +162,8 @@ writeFile "ex.tex"$toLaTeX $head ex
 >          let group = filter (eq y) xs
 >           in group : go ys (y:seen)
 
+>     firstIndex ys x = case elemIndex x ys of
+>                         Just i -> i
 
 
 *Cross> clusterBy (==) "mississippi"
@@ -188,7 +191,7 @@ Cross> groupBy (==) "mississippi"
 >   where
 >   row = h `div` 2
 >   col = (w - length answer) `div` 2
->   q = Q 0 (row, col) Horizontal question answer
+>   q = Q 0 (col, row) Horizontal question answer
 >   oldRow = gss !! row
 >   newRow = take col oldRow
 >               ++ map (\c -> Just (Nothing, None, c)) answer
@@ -266,11 +269,11 @@ hing,None,'o'),Just (Nothing,None,'k')])]
 
 > insertWordHorizontal :: Eq a => 
 >     (String, [a]) -> Grid a -> [Grid a]
-> insertWordHorizontal (frage,wort) (Grid w h qs gss) =
->   [ Grid w h (qs ++ [Q (length qs) (rowIx, posIx) Horizontal frage wort])
+> insertWordHorizontal (question,word) (Grid w h qs gss) =
+>   [ Grid w h (qs ++ [Q (length qs) (rowIx, posIx) Horizontal question word])
 >       (replaceAt rowIx newRow gss)
 >   | (rowIx, row) <- zip [0..] gss
->   , (posIx, newRow) <- insertWordInLine wort row
+>   , (posIx, newRow) <- insertWordInLine word row
 >   ]
 
 
@@ -319,31 +322,4 @@ hing,None,'o'),Just (Nothing,None,'k')])]
 
 
 > addNumbering :: Grid a -> Grid a
-> addNumbering (Grid w h qs cells) = Grid w h newQs newCells
->   where
->     numberedQs = zipWith (\n (Q _ pos dir q a) -> Q n pos dir q a) [0..] qs
->     newQs = numberedQs
-
->     newCells = foldl addQ cells numberedQs
-
->     addQ g (Q n (r, c) dir _ answer) =
->       let posList = case dir of
->                       Horizontal -> zip (repeat r) [c .. c + length answer - 1]
->                       Vertical   -> zip [r .. r + length answer - 1] (repeat c)
->           g1 = updateCell g (head posList) (\(_, b, ch) -> (Just n, b, ch))
->           g2 = updateCell g1 (last posList) (\(mi, b, ch) -> (mi, newBorder, ch))
->             where newBorder = case dir of
->                                 Horizontal -> Cross.Right
->                                 Vertical   -> Bottom
->       in g2
-
->     updateCell g (r, c) f =
->       let row = g !! r
->           cell = row !! c
->           newCell = case cell of
->                       Just (mi, b, ch) -> Just (f (mi, b, ch))
->                       Nothing -> error "Tried to update an empty cell"
->           newRow = replaceAt c newCell row
->       in replaceAt r newRow g
-
-
+> addNumbering (Grid w h qs cells) = (Grid w h qs cells)
