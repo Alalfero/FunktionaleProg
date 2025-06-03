@@ -142,15 +142,23 @@ writeFile "ex.tex"$toLaTeX $head ex
 
 
 
-> replaceAt :: (Eq t1, Num t1) => t1 -> t2 -> [t2] -> [t2]
-> replaceAt i y xs = []
+> replaceAt :: Int -> a -> [a] -> [a]
+> replaceAt i y xs  
+>   | i < 0 || i > length xs = xs
+>   | otherwise = take i xs ++ [y] ++ drop (i + 1) xs
 
 
 
 
 
 > clusterBy :: (t -> t -> Bool) -> [t] -> [[t]]
-> clusterBy eq xs = []
+> clusterBy _ [] = []
+> clusterBy eq (x:xs) = go [x] xs
+>  where
+>    go acc [] = [reverse acc]
+>    go acc@(a:_) (y:ys)
+>      | eq a y    = go (y:acc) ys
+>      | otherwise = reverse acc : go [y] ys
 
 
 
@@ -167,7 +175,7 @@ Cross> groupBy (==) "mississippi"
 
 
 > newGrid :: Int -> Grid a
-> newGrid _ = Grid 0 0 [][]
+> newGrid w = Grid w w [] (replicate w (replicate w Nothing))
 
 
 
@@ -175,7 +183,6 @@ Cross> groupBy (==) "mississippi"
 
 > firstWord :: (String,[a]) -> Grid a -> Grid a
 > firstWord _ g = g
-
 
 
 
