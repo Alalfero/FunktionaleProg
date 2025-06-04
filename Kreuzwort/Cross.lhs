@@ -116,7 +116,7 @@ writeFile "ex.tex"$toLaTeX $head ex
 
 
 
-> instance ToLaTeX (Grid Char) where
+> instance Show a => ToLaTeX (Grid a) where
 >  toLaTeX (Grid w h ws gss) =
 >    "\\begin{Puzzle}{"++show w++"}{"++show h++"}% \n"
 >    ++ latexGrid gss ++ "\\end{Puzzle}\n\n"
@@ -127,14 +127,22 @@ writeFile "ex.tex"$toLaTeX $head ex
 >    where
 >      latexGrid = concatMap latexRow
 >
->      latexRow :: [Maybe (Maybe Int, Border, Char)] -> String
+>      latexRow :: Show a => [Maybe (Maybe Int, Border, a)] -> String
 >      latexRow rs =
 >        "|" ++ intercalate "|" (map (maybe "*" formatCell) rs) ++ "|.\\\\\n"
 >
+>      formatCell :: Show a => (Maybe Int, Border, a) -> String
 >      formatCell (mNum, border, ch) =
 >        (maybe "" (\n -> "[" ++ show n ++ "]") mNum)
+>        ++ toVisibleChar ch
 >        ++ toLaTeX border
->        ++ [ch]
+>
+>      toVisibleChar :: Show a => a -> String
+>      toVisibleChar x =
+>        case show x of
+>           ['\'', c, '\''] -> [c] 
+>           ['"',  c, '"']  -> [c]  
+>           s               -> s    
 >
 >      (ver, hor) = partition (\(Q _ _ d _ _) -> d == Vertical) ws
 >      hors = sortOn (\(Q nr _ _ _ _) -> nr) hor
