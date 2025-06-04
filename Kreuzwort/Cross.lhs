@@ -72,23 +72,23 @@
 
 
 > ex = create  10
->   [("Begrüßung","HALLO")
+>   [("Begruessung","HALLO")
 >   ,("Wo wir alle leben","WELT")
->   ,("Örtchen","LOKUS")
+>   ,("Oertchen","LOKUS")
 >   ,("Heizvorrichtug","OFEN")
 >   ,("Zu beachten!","WICHTIG")
->   ,("Ganz Großartig","SUPER")
->   ,("Nahestehende doch nicht verwandr","FREUNDE")
->   ,("Antikes Volk und moderne Städter","ROEMER")
+>   ,("Ganz Grossartig","SUPER")
+>   ,("Nahestehende doch nicht verwandt","FREUNDE")
+>   ,("Antikes Volk und moderne Staedter","ROEMER")
 >   ,("Nicht unbedingt der Preis","WERT")
 >   ,("In einem Land lebend","LANDSLEUTE")
 >   ,("Kann auch schwere Arbeit sein, so zu konstruieren.","LEICHTBAU")
 >   ,("Limes","GRENZE")
->   ,("Persönliches Fürwort","ICH")
+>   ,("Persoenliches Fuerwort","ICH")
 >   ,("Pronomen","IHR")
 >   ,("Da tappen manche falsch herum im Nebel","LEBEN")
 >   ,("Oder doch lieber tun?","LASSEN")
->   ,("Fährt unter dem Pflaster","UBAHN")
+>   ,("Faehrt unter dem Pflaster","UBAHN")
 >   ,("Weiblicher Artikel","DIE")]
 
 
