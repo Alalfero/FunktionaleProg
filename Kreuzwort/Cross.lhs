@@ -116,29 +116,32 @@ writeFile "ex.tex"$toLaTeX $head ex
 
 
 
-> instance Show a => ToLaTeX (Grid a) where
+> instance ToLaTeX (Grid Char) where
 >  toLaTeX (Grid w h ws gss) =
 >    "\\begin{Puzzle}{"++show w++"}{"++show h++"}% \n"
->    ++latexGrid gss++"\\end{Puzzle}\n\n"
->    ++"\\paragraph*{Horizontal}~\\\\\n"
->    ++(concat $ map showQuestion hors)
->    ++"\\paragraph*{Vertikal}~\\\\\n"
->    ++(concat $ map showQuestion vers)  
->     where
->        latexGrid  = concat.(map latexRow)
->        latexRow rs = "|"++
->          (intercalate "|" 
->          $ map (maybe "*" 
->                 (\(a,b,c) -> ((maybe "[]" (\x->"["++show x++"]") a)
->                        ++toLaTeX b++[(show c!!1)]))) rs)
->           ++"|.\\\\\n"
->      
->        (ver,hor) = partition (\(Q _ _ d _ _)->d==Vertical) ws
->        hors = sortOn (\(Q nr _ _ _ _)->nr) hor 
->        vers = sortOn (\(Q nr _ _ _ _)->nr) ver 
->        showQuestion (Q nr _ _  q _)
->          = "{\\bfseries "++show nr++": }"++q++"\\\\\n"
-
+>    ++ latexGrid gss ++ "\\end{Puzzle}\n\n"
+>    ++ "\\paragraph*{Horizontal}~\\\\\n"
+>    ++ concatMap showQuestion hors
+>    ++ "\\paragraph*{Vertikal}~\\\\\n"
+>    ++ concatMap showQuestion vers
+>    where
+>      latexGrid = concatMap latexRow
+>
+>      latexRow :: [Maybe (Maybe Int, Border, Char)] -> String
+>      latexRow rs =
+>        "|" ++ intercalate "|" (map (maybe "*" formatCell) rs) ++ "|.\\\\\n"
+>
+>      formatCell (mNum, border, ch) =
+>        (maybe "" (\n -> "[" ++ show n ++ "]") mNum)
+>        ++ toLaTeX border
+>        ++ [ch]
+>
+>      (ver, hor) = partition (\(Q _ _ d _ _) -> d == Vertical) ws
+>      hors = sortOn (\(Q nr _ _ _ _) -> nr) hor
+>      vers = sortOn (\(Q nr _ _ _ _) -> nr) ver
+>
+>      showQuestion (Q nr _ _ q _) =
+>        "{\\bfseries " ++ show nr ++ ": }" ++ q ++ "\\\\\n"
 
 
 
@@ -194,7 +197,10 @@ Cross> groupBy (==) "mississippi"
 >   q = Q 0 (col, row) Horizontal question answer
 >   oldRow = gss !! row
 >   newRow = take col oldRow
->               ++ map (\c -> Just (Nothing, None, c)) answer
+>               ++ map (\(i, c) ->
+>                   let num = if i == 0 then Just 0 else Nothing
+>                   in Just (num, if i == length answer - 1 then Cross.Right else None, c)
+>                   ) (zip [0..] answer)
 >               ++ drop (col + length answer) oldRow
 >   newGr = replaceAt row newRow gss
 
@@ -319,7 +325,34 @@ hing,None,'o'),Just (Nothing,None,'k')])]
 
 
 
-
-
 > addNumbering :: Grid a -> Grid a
-> addNumbering (Grid w h qs cells) = (Grid w h qs cells)
+> addNumbering (Grid w h qs cells) =
+>   let numberedQs = zipWith (\n (Q _ pos dir str xs) -> Q n pos dir str xs) [0..] qs
+>       updatedCells = insertQuestionNumbersAndBorders numberedQs cells
+>   in Grid w h numberedQs updatedCells
+
+> insertQuestionNumbersAndBorders :: [Q a] -> [[Maybe (Maybe Int, Border, a)]] -> [[Maybe (Maybe Int, Border, a)]]
+> insertQuestionNumbersAndBorders qs cells = foldl insertOne cells qs
+>  where
+>    insertOne acc (Q n (r,c) dir _ xs) =
+>      let len = length xs
+>          lastPos = case dir of
+>            Horizontal -> (r, c + len - 1)
+>            Vertical   -> (r + len - 1, c)
+>          
+>          acc' = updateCell acc (r, c) (\(_, b, a) -> (Just n, b, a))
+>
+>          border = case dir of
+>            Horizontal -> Cross.Right
+>            Vertical   -> Cross.Bottom
+>
+>          acc'' = updateCell acc' lastPos (\(mi, _, a) -> (mi, border, a))
+>      in acc''
+
+> updateCell :: [[Maybe (Maybe Int, Border, a)]] -> (Int, Int) -> ((Maybe Int, Border, a) -> (Maybe Int, Border, a)) -> [[Maybe (Maybe Int, Border, a)]]
+> updateCell cells (r, c) f =
+>  let row = cells !! r
+>      cell = row !! c
+>      newCell = fmap f cell
+>      newRow = replaceAt c newCell row
+>  in replaceAt r newRow cells
